@@ -1,0 +1,1 @@
+export const CHANGED_BY_USER = "CHANGED_BY_USER";
