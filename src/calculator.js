@@ -43,8 +43,8 @@ function Calculator(state = initialState) {
     let ΞInvest = (state.$Invest - state.$HardwareCost) / state.$ETHPrice;
     log += FormatLog("calc Ξinvest = ($invest - $HardwareCost)/$ETHPrice", ΞInvest, "Ξ")
     
-    let validatorsCount = Math.round(ΞInvest/ETH_VALIDATOR_DEPOSIT);
-    log += FormatLog("calc validatorsCount = round(ΞInvest/ETH_VALIDATOR_DEPOSIT)", validatorsCount)
+    let validatorsCount = Math.floor(ΞInvest/ETH_VALIDATOR_DEPOSIT);
+    log += FormatLog("calc validatorsCount = floor(ΞInvest/ETH_VALIDATOR_DEPOSIT)", validatorsCount)
 
     let ΞValidatorYearReward  = EPOCH_PER_YEAR   *state.validatorUptime *ETH_VALIDATOR_EPOCH_REWARD;
     let ΞValidatorYearPenalty = EPOCH_PER_YEAR*(1-state.validatorUptime)*ETH_VALIDATOR_EPOCH_PENALTY;
