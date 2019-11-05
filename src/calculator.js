@@ -1,15 +1,19 @@
-//https://github.com/ethereum/eth2.0-specs/blob/dev/specs/core/0_beacon-chain.md#rewards-and-penalties
+// https://github.com/ethereum/eth2.0-specs/blob/dev/specs/core/0_beacon-chain.md#rewards-and-penalties
+// https://github.com/prysmaticlabs/prysm/beacon-chain/core/state/transition.go
 const BASE_REWARD_FACTOR = 64;
-const WHISTLEBLOWER_REWARD_QUOTIENT	= 512;
-const PROPOSER_REWARD_QUOTIENT	= 8;
-const INACTIVITY_PENALTY_QUOTIENT = 33554432;
-//const INACTIVITY_PENALTY_QUOTIENT = INVERSE_SQRT_E_DROP_TIME^2;
-//const INVERSE_SQRT_E_DROP_TIME := 2^12*epochs;// (about 18 days) 
-const MIN_SLASHING_PENALTY_QUOTIENT	= 32;
-const ETH_VALIDATOR_EPOCH_REWARD  = 0.000018788;
-const ETH_VALIDATOR_EPOCH_PENALTY = 0.000016393;
+const BASE_REWARDS_PER_EPOCH = 4;
+const ΞVALIDATOR_DEPOSIT = 32;
+const GWEI_PER_ETH = 1000000000;
 
-const ETH_VALIDATOR_DEPOSIT = 32;
+function ValidatorReward(total_balance, totalUptime, myUptime) {
+  let base_reward = ΞVALIDATOR_DEPOSIT * BASE_REWARD_FACTOR / Math.sqrt(total_balance*GWEI_PER_ETH) / BASE_REWARDS_PER_EPOCH;
+  // Process reward/penalty attestation of source, target, heard + crosslink
+  let Ξrewards   = 4 * base_reward * totalUptime;
+  let Ξpenalties = 4 * base_reward;
+
+  return myUptime*Ξrewards - (1-myUptime)*Ξpenalties;
+}
+
 const SEC_PER_SLOT = 6;
 const SLOTS_PER_EPOCH = 64;
 const EPOCH_PER_YEAR = 365*24*60*60/(SLOTS_PER_EPOCH*SEC_PER_SLOT);
@@ -17,11 +21,13 @@ const EPOCH_PER_YEAR = 365*24*60*60/(SLOTS_PER_EPOCH*SEC_PER_SLOT);
 const initialState = {
     $Invest: 100000,
     $ETHPrice: 185,
+    ΞTotalETHStaked: 10000000,
     $HardwareCost: 200*3,             // beacon+validator+hotreserve
     yearHardwareFullDepreciation: 4,
     $ISPCostPerMonth: 20,
     $ElectricityCostPerMonthPerValidator: 10/64,
     validatorUptime: 0.99,
+    totalUptime: 0.99,
 }
 
 function FormatLog(varName, value, unit) {
@@ -31,45 +37,47 @@ function FormatLog(varName, value, unit) {
 }
 
 function Calculator(state = initialState) {    
-    let log = ""
-    log += FormatLog("const ETH_VALIDATOR_DEPOSIT", ETH_VALIDATOR_DEPOSIT)
-    log += FormatLog("const EPOCH_PER_YEAR", EPOCH_PER_YEAR)
+    let log = "";
+    log += "Constants:\n";
+    log += FormatLog("VALIDATOR_DEPOSIT", ΞVALIDATOR_DEPOSIT,"Ξ");
+    log += FormatLog("EPOCH_PER_YEAR", EPOCH_PER_YEAR);
+    log += FormatLog("BASE_REWARD_FACTOR", BASE_REWARD_FACTOR);
+    log += FormatLog("BASE_REWARDS_PER_EPOCH", BASE_REWARDS_PER_EPOCH);
+
+    log += "\nInputs:\n";
+    log += FormatLog("$Invest",         state.$Invest,       "$");
+    log += FormatLog("$HardwareCost",   state.$HardwareCost, "$");
+    log += FormatLog("$ETHPrice",       state.$ETHPrice,     "$");
+    log += FormatLog("validatorUptime", state.validatorUptime*100, "%");
+    log += FormatLog("totalUptime    ", state.totalUptime*100,     "%");
     
-    log += FormatLog("input $invest", state.$Invest, "$")
-    log += FormatLog("input $HardwareCost", state.$HardwareCost, "$")
-    log += FormatLog("input $ETHPrice", state.$ETHPrice, "$")
-    log += FormatLog("input validatorUptime", state.validatorUptime*100, "%")
-    
+    log += "\nCalculations:\n";
+
     let ΞInvest = (state.$Invest - state.$HardwareCost) / state.$ETHPrice;
-    log += FormatLog("calc Ξinvest = ($invest - $HardwareCost)/$ETHPrice", ΞInvest, "Ξ")
+    log += FormatLog("ΞInvest = ($Invest - $HardwareCost)/$ETHPrice", ΞInvest, "Ξ");
     
-    let validatorsCount = Math.floor(ΞInvest/ETH_VALIDATOR_DEPOSIT);
-    log += FormatLog("calc validatorsCount = floor(ΞInvest/ETH_VALIDATOR_DEPOSIT)", validatorsCount)
-
-    let ΞValidatorYearReward  = EPOCH_PER_YEAR   *state.validatorUptime *ETH_VALIDATOR_EPOCH_REWARD;
-    let ΞValidatorYearPenalty = EPOCH_PER_YEAR*(1-state.validatorUptime)*ETH_VALIDATOR_EPOCH_PENALTY;
-
-    log += FormatLog("calc ΞValidatorYearReward  = EPOCH_PER_YEAR * validatorUptime     * ETH_VALIDATOR_EPOCH_REWARD" ,ΞValidatorYearReward ,"Ξ");
-    log += FormatLog("calc ΞValidatorYearPenalty = EPOCH_PER_YEAR * (1-validatorUptime) * ETH_VALIDATOR_EPOCH_PENALTY",ΞValidatorYearPenalty,"Ξ");
+    let validatorsCount = Math.floor(ΞInvest/ΞVALIDATOR_DEPOSIT);
+    log += FormatLog("validatorsCount = floor(ΞInvest/ΞVALIDATOR_DEPOSIT)", validatorsCount)    
     
-    let ΞValidatorInterest = ΞValidatorYearReward-ΞValidatorYearPenalty;
-    log += FormatLog("calc ΞValidatorInterest = ΞValidatorYearReward-ΞValidatorYearPenalty",ΞValidatorInterest,"Ξ");
+    let ΞOneValidatorReward = ValidatorReward(state.ΞTotalETHStaked, state.totalUptime, state.validatorUptime)*EPOCH_PER_YEAR;
+    log += FormatLog("ΞOneValidatorReward",ΞOneValidatorReward,"Ξ //calculations: https://github.com/skillful-alex/eth2stake/blob/master/src/calculator.js");
 
-    let $ValidatorsInterest = ΞValidatorInterest*validatorsCount*state.$ETHPrice;
+    let $ValidatorsInterest = ΞOneValidatorReward*validatorsCount*state.$ETHPrice;
     let $NetworkFees = state.$ISPCostPerMonth*12;
     let $HardwareFees = state.$HardwareCost/state.yearHardwareFullDepreciation;
     let $ElectricityFees = state.$ElectricityCostPerMonthPerValidator*validatorsCount*12;
 
-    log += FormatLog("calc $ValidatorsInterest = ΞValidatorInterest*validatorsCount*$ETHPrice",$ValidatorsInterest,"$");
-    log += FormatLog("calc $NetworkFees = $ISPCostPerMonth*12",$NetworkFees,"$");
-    log += FormatLog("calc $HardwareFees = $HardwareCost/yearHardwareFullDepreciation",$HardwareFees,"$");
-    log += FormatLog("calc $ElectricityFees = $ElectricityCostPerMonthPerValidator*validatorsCount*12",$ElectricityFees,"$");
+    log += FormatLog("$ValidatorsInterest = ΞOneValidatorReward*validatorsCount*$ETHPrice",$ValidatorsInterest,"$");
+    log += FormatLog("$NetworkFees = $ISPCostPerMonth*12",$NetworkFees,"$");
+    log += FormatLog("$HardwareFees = $HardwareCost/yearHardwareFullDepreciation",$HardwareFees,"$");
+    log += FormatLog("$ElectricityFees = $ElectricityCostPerMonthPerValidator*validatorsCount*12",$ElectricityFees,"$");
 
     let $AnnualIncome = $ValidatorsInterest - $HardwareFees - $NetworkFees - $ElectricityFees;
+    $AnnualIncome = Math.round($AnnualIncome*100)/100;
 
-    log += FormatLog("calc $AnnualIncome = $ValidatorsInterest - $HardwareFees - $NetworkFees - $ElectricityFees",$AnnualIncome,"$");
+    log += FormatLog("$AnnualIncome = $ValidatorsInterest - $HardwareFees - $NetworkFees - $ElectricityFees",$AnnualIncome,"$");
     
-    console.log(log);
+    log += "\n\n";
 
     return {
         ...state,

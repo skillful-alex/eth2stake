@@ -17,10 +17,15 @@ class AdvancedSettings extends React.Component {
         calcInputActions.onChangedByUser(event.target.name, event.target.value)
     );
   }
-
   render() {
     return (
-        <ExpansionPanel>
+        <ExpansionPanel onChange={
+          (event, expanded) => {
+            window.gtag('event', 'expansion', {
+              'event_category': 'calc',
+              'event_label': 'AdvancedSettings',
+            });} 
+          }>
             <ExpansionPanelSummary
               expandIcon={<ExpandMoreIcon />}
               aria-controls="panel1c-content"
@@ -29,8 +34,8 @@ class AdvancedSettings extends React.Component {
                 Advanced settings
             </ExpansionPanelSummary>
             <ExpansionPanelDetails>
-            <Grid container direction="column" spacing={2}>
-              <Grid item xs={6}>
+            <Grid container spacing={2}>
+              <Grid container item direction="column" xs={4}>
                 <TextField 
                   label="Hardware Cost" 
                   name="$HardwareCost" 
@@ -52,7 +57,7 @@ class AdvancedSettings extends React.Component {
                   value={this.props.$ElectricityCostPerMonthPerValidator }
                   onChange={this.onChange} InputProps={{ inputComponent: DollarFormat }} />
               </Grid>
-              <Grid item xs={6}>
+              <Grid container item direction="column" xs={4}>
               <TextField 
                   label="ETH Price"
                   name="$ETHPrice"
@@ -62,6 +67,16 @@ class AdvancedSettings extends React.Component {
                   label="Validator Uptime"
                   name="validatorUptime"
                   value={this.props.validatorUptime }
+                  onChange={this.onChange} />
+              <TextField 
+                  label="Total Uptime"
+                  name="totalUptime"
+                  value={this.props.totalUptime }
+                  onChange={this.onChange} />
+              <TextField 
+                  label="Total ETH Staked"
+                  name="ΞTotalETHStaked"
+                  value={this.props.ΞTotalETHStaked }
                   onChange={this.onChange} />
               </Grid>
             </Grid>
@@ -79,6 +94,8 @@ function mapStateToProps(state) {
     $ElectricityCostPerMonthPerValidator: state.calc.$ElectricityCostPerMonthPerValidator,
     $ETHPrice: state.calc.$ETHPrice,
     validatorUptime: state.calc.validatorUptime,
+    totalUptime: state.calc.totalUptime,
+    ΞTotalETHStaked: state.calc.ΞTotalETHStaked,
   };
 }
 

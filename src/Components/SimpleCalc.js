@@ -4,6 +4,11 @@ import {TextField, Grid, InputAdornment} from '@material-ui/core'
 import {InputLabel, Input} from '@material-ui/core'
 import DollarFormat from './DollarFormat';
 
+import Card from '@material-ui/core/Card';
+import CardActionArea from '@material-ui/core/CardActionArea';
+import CardContent from '@material-ui/core/CardContent';
+import Typography from '@material-ui/core/Typography';
+
 import * as calcInputActions from '../store/calcInputActions';
 
 class SimpleCalc extends React.Component {
@@ -20,8 +25,9 @@ class SimpleCalc extends React.Component {
   
     render() {
         return (
-            <Grid container justify="space-evenly" alignItems="center">
-                <Grid item>
+            <div style={{ padding: 20 }}>
+            <Grid container spacing={2}>
+                <Grid container item direction="column" xs={4}>
                     <InputLabel htmlFor="standard-adornment-amount">How much are you willing to invest</InputLabel>
                     <TextField
                         name="$Invest"
@@ -30,7 +36,7 @@ class SimpleCalc extends React.Component {
                         InputProps={{ inputComponent: DollarFormat }}
                     />
                 </Grid>
-                <Grid item>
+                <Grid container item direction="column" xs={4}>
                     <Grid container direction="column">
                         <InputLabel>Investment interest</InputLabel>
                         <TextField 
@@ -45,7 +51,22 @@ class SimpleCalc extends React.Component {
                         />
                     </Grid>
                 </Grid>
+                <Grid container item direction="column" xs={4} alignItems="flex-end" justify="center">
+                    <Card>
+                        <CardActionArea onClick={() => { window.trackOutboundLink('https://t.me/eth2stake'); }}>
+                            <CardContent>
+                                <Typography gutterBottom variant="h5" component="h2">
+                                    Are you planning the staking?
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary" component="p">
+                                    Participate in <a href="https://t.me/eth2stake">@eth2stake</a>.
+                                </Typography>
+                            </CardContent>
+                        </CardActionArea>
+                    </Card>
+                </Grid>
             </Grid>
+            </div>
       );
     }
   }
