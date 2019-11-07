@@ -76,8 +76,6 @@ function Calculator(state = initialState) {
     $AnnualIncome = Math.round($AnnualIncome*100)/100;
 
     log += FormatLog("$AnnualIncome = $ValidatorsInterest - $HardwareFees - $NetworkFees - $ElectricityFees",$AnnualIncome,"$");
-    
-    log += "\n\n";
 
     return {
         ...state,

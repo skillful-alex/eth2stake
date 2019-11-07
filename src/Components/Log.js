@@ -2,9 +2,11 @@ import React from 'react';
 import { connect } from 'react-redux';
 import {ExpansionPanel, ExpansionPanelSummary, ExpansionPanelDetails} from '@material-ui/core'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import { LazyLog } from 'react-lazylog';
 
 class Log extends React.Component {
+  logLine(item, index) {
+    return <li key={index+item}>{item}</li>
+  }
   render() {
     return (
       <ExpansionPanel onChange={
@@ -22,7 +24,7 @@ class Log extends React.Component {
           Calculation log
         </ExpansionPanelSummary>
         <ExpansionPanelDetails>
-          <LazyLog text={this.props.log} height={200} selectableLines={true} url="about:blank"/>
+          <ol style={{ listStyleType: "decimal-leading-zero" }}>{this.props.log.split('\n').map(this.logLine)}</ol>
         </ExpansionPanelDetails>
       </ExpansionPanel>
     );
